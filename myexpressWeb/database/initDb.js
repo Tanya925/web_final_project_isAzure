@@ -3,7 +3,7 @@
 
 import fs from 'fs'  // fs 是 Node.js 內建的檔案系統工具
 import path from 'path'  // path 是處理路徑用的
-import sqlite3 from 'sqlite3'  // 操作 SQLite 資料庫的套件
+import { DatabaseSync } from 'node:sqlite'  // 使用 Node 內建的 SQLite，避免部署時依賴原生 bindings
 import { fileURLToPath } from 'url'  // 這兩行是為了在 ES 模組中取得 __dirname 的替代方案，因為 ES 模組沒有內建 __dirname 變數
 
 const __filename = fileURLToPath(import.meta.url)  // 取得目前檔案完整路徑
@@ -15,8 +15,6 @@ const dbDirectory = path.dirname(dbPath)
 if (!fs.existsSync(dbDirectory)) {
   fs.mkdirSync(dbDirectory, { recursive: true })
 }
-
-sqlite3.verbose()  // 讓 sqlite3 顯示比較詳細的錯誤資訊
 
 // [編號, 中文標題, 英文標題, 說明]
 const sdgSeeds = [
@@ -104,48 +102,101 @@ const postSeeds = [
 
 // 建立資料庫連線的函式，其他地方要操作資料庫時就呼叫這個函式來取得連線。
 export function createDatabaseConnection() {
-  return new sqlite3.Database(dbPath)
+  return new SQLiteCompatDatabase(dbPath)
 }
 
-// 把 sqlite3 的 callback 形式包成 Promise，後面比較好用 async/await。
-// run: 執行 SQL 語句但不回傳資料（例如 CREATE、INSERT、UPDATE、DELETE）
-function run(db, sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function handleRun(error) {
-      if (error) {
-        reject(error)
-        return
-      }
-      resolve(this)
-    })
-  })
+function normalizeParams(params = []) {
+  if (Array.isArray(params)) {
+    return params
+  }
+
+  return [params]
 }
 
-// get: 執行 SQL 語句並回傳單一資料列（例如 SELECT 單筆資料）
-function get(db, sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (error, row) => {
-      if (error) {
-        reject(error)
-        return
+class SQLiteCompatDatabase {
+  constructor(filePath) {
+    this.connection = new DatabaseSync(filePath)
+  }
+
+  run(sql, params = [], callback) {
+    try {
+      const result = this.connection.prepare(sql).run(...normalizeParams(params))
+      const context = {
+        lastID: Number(result.lastInsertRowid),
+        changes: result.changes,
       }
-      resolve(row)
-    })
-  })
+
+      if (typeof callback === 'function') {
+        callback.call(context, null)
+      }
+
+      return context
+    } catch (error) {
+      if (typeof callback === 'function') {
+        callback(error)
+        return undefined
+      }
+
+      throw error
+    }
+  }
+
+  get(sql, params = [], callback) {
+    try {
+      const row = this.connection.prepare(sql).get(...normalizeParams(params))
+
+      if (typeof callback === 'function') {
+        callback(null, row)
+        return undefined
+      }
+
+      return row
+    } catch (error) {
+      if (typeof callback === 'function') {
+        callback(error)
+        return undefined
+      }
+
+      throw error
+    }
+  }
+
+  all(sql, params = [], callback) {
+    try {
+      const rows = this.connection.prepare(sql).all(...normalizeParams(params))
+
+      if (typeof callback === 'function') {
+        callback(null, rows)
+        return undefined
+      }
+
+      return rows
+    } catch (error) {
+      if (typeof callback === 'function') {
+        callback(error)
+        return undefined
+      }
+
+      throw error
+    }
+  }
+
+  close() {
+    this.connection.close()
+  }
 }
 
-// all: 執行 SQL 語句並回傳多筆資料列（例如 SELECT 多筆資料）
-function all(db, sql, params = []) {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (error, rows) => {
-      if (error) {
-        reject(error)
-        return
-      }
+// 這些 helper 保持 async 介面，讓初始化流程維持原本的 await 寫法。
+async function run(db, sql, params = []) {
+  return db.run(sql, params)
+}
 
-      resolve(rows)
-    })
-  })
+async function get(db, sql, params = []) {
+  return db.get(sql, params)
+}
+
+async function all(db, sql, params = []) {
+  return db.all(sql, params)
 }
 
 // 檢查資料表目前有哪些欄位，讓舊版資料庫也能在啟動時自動補齊缺少的欄位。
