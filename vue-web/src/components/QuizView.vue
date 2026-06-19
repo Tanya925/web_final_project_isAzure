@@ -5,7 +5,7 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-import axios from 'axios'
+import api from '../api.js'
 
 const props = defineProps({
   currentUser: {
@@ -30,13 +30,13 @@ const choiceLabels = ['A', 'B', 'C', 'D']
 
 // 作答或重抽之後，重新同步目前登入者的積分。
 async function fetchUser() {
-  const res = await axios.get('http://localhost:3000/users/me', { withCredentials: true })
+  const res = await api.get('/users/me')
   emit('user-updated', res.data)
 }
 
 // 抓一組新的隨機題目。
 async function fetchQuiz() {
-  const res = await axios.get('http://localhost:3000/api/quiz/random')
+  const res = await api.get('/api/quiz/random')
   questions.value = res.data
   selectedAnswers.value = {}
   result.value = null
@@ -55,11 +55,7 @@ async function submitQuiz() {
       answer: selectedAnswers.value[question.id] || '',
     }))
 
-    const res = await axios.post(
-      'http://localhost:3000/api/quiz/submit',
-      { answers },
-      { withCredentials: true },
-    )
+    const res = await api.post('/api/quiz/submit', { answers })
 
     result.value = res.data
     await fetchUser()

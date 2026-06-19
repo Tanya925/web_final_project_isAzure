@@ -1,0 +1,12 @@
+{
+  "name": "web-final-project-isazure",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm install --prefix myexpressWeb --ignore-scripts && npm install --prefix vue-web --ignore-scripts && npm run build --prefix vue-web",
+    "start": "node myexpressWeb/bin/www"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

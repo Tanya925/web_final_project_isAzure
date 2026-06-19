@@ -5,10 +5,7 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'  // Vue 3 的 Composition API，onMounted 是一個生命週期函式，reactive 用來定義響應式物件(會變動的資料)，ref 用來定義響應式基本類型資料。
-import axios from 'axios'  // 用來跟後端 API 溝通的 HTTP 客戶端
-
-// 集中管理後端主機位址，之後如果 API 網址要改，只要改這裡即可。
-const API_BASE_URL = 'http://localhost:3000'
+import api from '../api.js'  // 用來跟後端 API 溝通的 HTTP 客戶端
 
 // currentUser 目前主要是讓這個元件知道：社群貼文是誰在登入狀態下操作。
 const props = defineProps({
@@ -36,7 +33,7 @@ const selectedImageFile = ref(null)
 
 // 讀取目前社群牆所有貼文。
 async function fetchPosts() {
-  const res = await axios.get('http://localhost:3000/api/posts')  // 從後端 API 取得貼文資料，預期會得到一個陣列，每個元素包含貼文內容、圖片路徑、作者名稱、建立時間等欄位。
+  const res = await api.get('/api/posts')  // 從後端 API 取得貼文資料，預期會得到一個陣列，每個元素包含貼文內容、圖片路徑、作者名稱、建立時間等欄位。
   posts.value = res.data
 }
 
@@ -86,11 +83,7 @@ async function submitPost() {
   }
 
   try {
-    await axios.post(
-      'http://localhost:3000/api/posts',
-      formData,
-      { withCredentials: true },
-    )
+    await api.post('/api/posts', formData)
 
     form.content = ''
     previewImage.value = ''
@@ -121,7 +114,7 @@ function getImageUrl(imagePath) {
     return imagePath
   }
 
-  return `${API_BASE_URL}${imagePath}`
+  return imagePath
 }
 
 

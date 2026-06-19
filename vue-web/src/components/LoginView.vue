@@ -5,7 +5,7 @@
 
 <script setup>
 import { reactive, ref } from 'vue'  // Vue 3 的 Composition API，reactive 用來定義響應式物件(會變動的資料)，ref 用來定義響應式基本類型資料。
-import axios from 'axios'  // 用來跟後端 API 溝通的第三方軟件
+import api from '../api.js'  // 用來跟後端 API 溝通的第三方軟件
 
 const emit = defineEmits(['login-success'])  // 定義一個事件，讓這個元件在登入成功後，可以通知父元件 App.vue 來更新使用者資料，確保畫面上顯示的使用者資訊是最新的。
 
@@ -32,9 +32,7 @@ async function login() {
 
   // 把帳密傳給後端 API，讓後端驗證並建立 session。登入成功後會得到使用者資料，透過事件告訴父元件更新使用者狀態。
   try {
-    const res = await axios.post('http://localhost:3000/users/login', form, {
-      withCredentials: true,
-    })
+    const res = await api.post('/users/login', form)
     emit('login-success', res.data)
   } catch (err) {
     error.value = err.response?.data?.message || '登入失敗'
@@ -50,7 +48,7 @@ async function register() {
   loading.value = true
 
   try {
-    const res = await axios.post('http://localhost:3000/users/register', registerForm)
+    const res = await api.post('/users/register', registerForm)
     success.value = res.data.message
     registerForm.username = ''
     registerForm.password = ''

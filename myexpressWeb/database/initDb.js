@@ -1,18 +1,19 @@
 // 主要功能：負責初始化資料庫，建立必要的資料表，並在啟動伺服器前把預設的 SDGs、任務、測驗題目和貼文資料塞進資料庫。這樣就算重啟伺服器也不會不見資料了。
 
 
-mport fs from 'fs'  // fs 是 Node.js 內建的檔案系統工具
+import fs from 'fs'  // fs 是 Node.js 內建的檔案系統工具
 import path from 'path'  // path 是處理路徑用的
 import sqlite3 from 'sqlite3'  // 操作 SQLite 資料庫的套件
 import { fileURLToPath } from 'url'  // 這兩行是為了在 ES 模組中取得 __dirname 的替代方案，因為 ES 模組沒有內建 __dirname 變數
 
 const __filename = fileURLToPath(import.meta.url)  // 取得目前檔案完整路徑
 const __dirname = path.dirname(__filename)  // 取得目前檔案所在資料夾
-const dbPath = path.join(__dirname, 'sdgs.db')  // 設定資料庫檔案位置
+const dbPath = process.env.DB_FILE || path.join(__dirname, 'sdgs.db')  // 設定資料庫檔案位置
 
-// 如果 database 資料夾不存在，就先建立起來。
-if (!fs.existsSync(__dirname)) {
-  fs.mkdirSync(__dirname, { recursive: true })
+// 如果資料庫所在資料夾不存在，就先建立起來。
+const dbDirectory = path.dirname(dbPath)
+if (!fs.existsSync(dbDirectory)) {
+  fs.mkdirSync(dbDirectory, { recursive: true })
 }
 
 sqlite3.verbose()  // 讓 sqlite3 顯示比較詳細的錯誤資訊

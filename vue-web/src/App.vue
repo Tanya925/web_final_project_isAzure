@@ -5,7 +5,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import api from './api.js'
 
 // 匯入各個功能頁面的元件，這些元件會在 main 區域根據使用者選擇的分頁來切換顯示。
 import ChallengeView from './components/ChallengeView.vue'
@@ -30,7 +30,7 @@ const currentUser = ref(null)
 // 重新整理頁面時，向後端確認 session 是否還在。
 onMounted(async () => {
   try {
-    const res = await axios.get('http://localhost:3000/users/me', { withCredentials: true })
+    const res = await api.get('/users/me')
     currentUser.value = res.data
   } catch (e) {
     currentUser.value = null
@@ -55,7 +55,7 @@ function handleLoginSuccess(user) {
 
 // 登出時同步通知後端清掉 session。
 async function logout() {
-  await axios.post('http://localhost:3000/users/logout', {}, { withCredentials: true })
+  await api.post('/users/logout', {})
   currentUser.value = null
   activePage.value = 'sdgs'
 }

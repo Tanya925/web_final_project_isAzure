@@ -2,6 +2,7 @@
 
 
 import express from 'express';  // 引入 Express 框架，讓我們可以建立路由和處理 HTTP 請求
+import fs from 'fs';
 import path from 'path';  // Node.js 內建的 path 模組，幫助我們處理檔案路徑
 import cookieParser from 'cookie-parser';  // 解析 HTTP 請求中的 Cookie，讓我們可以在 req.cookies 中使用
 import session from 'express-session' // 用來在 server 端建立 session（以 cookie 綁定使用者登入狀態）
@@ -32,13 +33,27 @@ await initializeDatabase();
 const uploadsDir = ensureUploadsDir();
 
 const app = express();  // 建立 Express 應用程式的實例，這個 app 就是我們的伺服器，可以用來設定路由和中介層
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : null;
+const distDir = path.join(__dirname, 'dist');
+
+app.set('trust proxy', 1);
 
 // 這裡集中設定後端共用中介層，例如 CORS、JSON 解析與靜態資源。
 // 啟用 CORS 並允許前端（Vite dev server）帶 cookie（credentials）以支援 session。
 app.use(logger('dev'));
 app.use(
 	cors({
-		origin: 'http://localhost:5173',
+		origin(origin, callback) {
+			if (!origin || !allowedOrigins || allowedOrigins.includes(origin)) {
+				callback(null, true);
+				return;
+			}
+
+			callback(new Error('Not allowed by CORS'));
+		},
 		credentials: true,
 	}),
 )
@@ -53,12 +68,13 @@ app.use('/uploads', express.static(uploadsDir));
 // 設定 express-session（開發環境簡單設定）。請勿用在高流量/生產環境的預設 memory store。
 app.use(
 	session({
-		secret: 'change-this-secret-in-prod',
+		secret: process.env.SESSION_SECRET || 'change-this-secret-in-prod',
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
 			httpOnly: true,
-			secure: false, // dev 用 false，部署到 https 時請改為 true
+			secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
 			maxAge: 24 * 60 * 60 * 1000, // 1 天
 		},
 	}),
@@ -73,5 +89,20 @@ app.use('/api/challenges', challengesRouter);
 app.use('/api/quiz', quizRouter);
 app.use('/api/posts', postsRouter);
 app.use('/users', usersRouter);
+
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true });
+});
+
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/users') && !req.path.startsWith('/uploads')) {
+      return res.sendFile(path.join(distDir, 'index.html'));
+    }
+
+    return next();
+  });
+}
 
 export default app;  // 把這個 app 匯出，讓 bin/www.js 可以引入使用，啟動伺服器
