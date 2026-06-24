@@ -33,64 +33,16 @@ const goalTintMap = {
 }
 
 
-// 每個 SDG 都有一組對應的圖示候選清單，這些圖示來自 Wikimedia Commons，都是官方的 SDG 圖示，可以在前端根據需要選擇使用，確保視覺上的一致性和專業感。
-const goalIconCandidatesMap = {
-  1: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_01NoPoverty.svg',
-  ],
-  2: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_02ZeroHunger.svg',
-  ],
-  3: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_03GoodHealthWellBeing.svg',
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_03GoodHealth.svg',
-  ],
-  4: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_04QualityEducation.svg',
-  ],
-  5: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_05GenderEquality.svg',
-  ],
-  6: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_06CleanWaterSanitation.svg',
-  ],
-  7: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_07AffordableCleanEnergy.svg',
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_07CleanEnergy.svg',
-  ],
-  8: [
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Sustainable_Development_Goal_08DecentWork.svg/330px-Sustainable_Development_Goal_08DecentWork.svg.png',
-  ],
-  9: [
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/13/Sustainable_Development_Goal_09Industry.svg/330px-Sustainable_Development_Goal_09Industry.svg.png',
-  ],
-  10: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_10ReducedInequalities.svg',
-  ],
-  11: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_11SustainableCities.svg',
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_11SustainableCitiesCommunities.svg',
-  ],
-  12: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_12ResponsibleConsumption.svg',
-  ],
-  13: [
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Sustainable_Development_Goal_13Climate.svg/330px-Sustainable_Development_Goal_13Climate.svg.png',
-  ],
-  14: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_14LifeBelowWater.svg',
-  ],
-  15: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_15LifeOnLand.svg',
-  ],
-  16: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_16PeaceJusticeInstitutions.svg',
-  ],
-  17: [
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_17PartnershipsForTheGoals.svg',
-    'https://commons.wikimedia.org/wiki/Special:FilePath/Sustainable_Development_Goal_17Partnerships.svg',
-  ],
-}
+// 背面卡牌圖也改成讀取專案內的靜態圖片，避免外部網址失效或被擋。
+// 請把圖片放在：vue-web/public/images/sdgs/back/
+// 檔名格式固定為：sdg-01.png ~ sdg-17.png
+const goalIconCandidatesMap = Object.fromEntries(
+  Array.from({ length: 17 }, (_, index) => {
+    const goalNumber = index + 1
+    const paddedNumber = String(goalNumber).padStart(2, '0')
+    return [goalNumber, [`/images/sdgs/back/sdg-${paddedNumber}.png`]]
+  }),
+)
 
 // 每個 SDG 都有一段對應的詳細說明，這些說明可以在前端的 SDG 詳細頁面顯示，讓使用者更深入地了解每個目標的內容和重要性。這些說明是根據聯合國官方對 SDG 的定義和解釋整理而來的，確保資訊的準確性和權威性。
 const goalDetailMap = {
