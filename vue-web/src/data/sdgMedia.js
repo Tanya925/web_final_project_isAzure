@@ -1,25 +1,15 @@
 // 主要功能：SDG 圖片與資料對照表
 
-// 這裡使用了 LoremFlickr 來提供 SDG 相關的圖片，並且根據 SDG 的編號對應到不同的主題關鍵字，確保每個目標都有獨特的圖片。這些圖片會在前端顯示，讓使用者更直觀地了解每個 SDG 的內容。
-const goalPhotoMap = {
-  1: 'https://loremflickr.com/800/600/poverty,slum?lock=1',
-  2: 'https://loremflickr.com/800/600/hunger,food,farm?lock=2',
-  3: 'https://loremflickr.com/800/600/health,hospital,doctor?lock=3',
-  4: 'https://loremflickr.com/800/600/education,classroom,school?lock=4',
-  5: 'https://loremflickr.com/800/600/women,leadership,equality?lock=5',
-  6: 'https://loremflickr.com/800/600/water,sanitation,clean?lock=6',
-  7: 'https://loremflickr.com/800/600/solar,energy,renewable?lock=7',
-  8: 'https://loremflickr.com/800/600/work,career,industry?lock=8',
-  9: 'https://loremflickr.com/800/600/bridge,technology,infrastructure?lock=9',
-  10: 'https://loremflickr.com/800/600/diversity,inclusion,community?lock=10',
-  11: 'https://loremflickr.com/800/600/city,public-transport,urban?lock=11',
-  12: 'https://loremflickr.com/800/600/recycling,sustainable,consumption?lock=12',
-  13: 'https://loremflickr.com/800/600/climate,forest,environment?lock=13',
-  14: 'https://loremflickr.com/800/600/ocean,coral,marine?lock=14',
-  15: 'https://loremflickr.com/800/600/forest,wildlife,biodiversity?lock=15',
-  16: 'https://loremflickr.com/800/600/justice,peace,court?lock=16',
-  17: 'https://loremflickr.com/800/600/partnership,teamwork,meeting?lock=17',
-}
+// 正面卡牌圖改成讀取專案內的靜態圖片，部署到 Azure 時會一起打包出去。
+// 請把圖片放在：vue-web/public/images/sdgs/front/
+// 檔名格式固定為：sdg-01.jpg ~ sdg-17.jpg
+const goalPhotoMap = Object.fromEntries(
+  Array.from({ length: 17 }, (_, index) => {
+    const goalNumber = index + 1
+    const paddedNumber = String(goalNumber).padStart(2, '0')
+    return [goalNumber, `/images/sdgs/front/sdg-${paddedNumber}.jpg`]
+  }),
+)
 
 // 每個 SDG 都有一組對應的顏色，包含 base 色和 light 色，這些顏色可以用在前端的設計上，例如背景色、按鈕色等，讓整體風格更統一且具有識別性。
 const goalTintMap = {

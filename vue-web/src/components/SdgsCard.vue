@@ -30,6 +30,7 @@ const titleParts = props.sdg.title.split('\n')
 const chineseTitle = titleParts[0] || props.sdg.title
 const englishTitle = titleParts[1] || ''
 const goalPhoto = getGoalPhoto(props.sdg.number)
+const goalPhotoVisible = ref(Boolean(goalPhoto))
 const goalIconCandidates = getGoalIconCandidates(props.sdg.number)
 const goalIconIndex = ref(0)
 const goalDescription = getGoalDetail(props.sdg.number, props.sdg.description)
@@ -45,6 +46,10 @@ function handleIconError() {
   }
 }
 
+function handlePhotoError() {
+  goalPhotoVisible.value = false
+}
+
 
 // 切換卡牌正反面。
 function flipCard() {
@@ -56,10 +61,11 @@ function flipCard() {
   <button class="card-shell" :class="{ flipped: isFlipped }" @click="flipCard">
     <div class="card-face front">
       <img
-        v-if="goalPhoto"
+        v-if="goalPhoto && goalPhotoVisible"
         :src="goalPhoto"
         :alt="`${chineseTitle} 對應照片`"
         class="front-photo"
+        @error="handlePhotoError"
       />
       <div class="front-overlay"></div>
       <div class="card-top">
